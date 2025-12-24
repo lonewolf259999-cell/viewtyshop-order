@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewTyShop - Order System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>ViewTyShop</h1>
+    <p></p>
+</header>
+
+<section class="order-section">
+    <h2>📝 ข้อมูลการจัดส่ง</h2>
+    <form id="orderForm">
+        
+        <div id="product-list">
+            </div>
+
+        <button type="button" class="add-product-btn" onclick="addProductRow()">
+            + เพิ่มรายการสินค้า (สีอื่น/ไซส์อื่น)
+        </button>
+
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล:</label>
+            <input type="text" id="name" placeholder="ชื่อผู้รับสินค้า" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>บ้านเลขที่/ซอย:</label>
+                <input type="text" id="houseNo" required>
+            </div>
+            <div class="form-group">
+                <label>ถนน:</label>
+                <input type="text" id="street" placeholder="ถ้าไม่มีใส่ -">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>แขวง/ตำบล:</label>
+                <input type="text" id="subDistrict" required>
+            </div>
+            <div class="form-group">
+                <label>เขต/อำเภอ:</label>
+                <input type="text" id="district" required>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>จังหวัด:</label>
+                <input type="text" id="province" required>
+            </div>
+            <div class="form-group">
+                <label>รหัสไปรษณีย์:</label>
+                <input type="text" id="zipcode" maxlength="5" pattern="\d{5}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>เบอร์โทรศัพท์:</label>
+            <input type="tel" id="phone" placeholder="08XXXXXXXX" maxlength="10" required>
+        </div>
+
+        <div class="form-group">
+            <label>วิธีการชำระเงิน:</label>
+            <select id="paymentMethod" required>
+                <option value="โอนเงิน">โอนเงิน (แนบสลิป)</option>
+                <option value="เก็บเงินปลายทาง">เก็บเงินปลายทาง (COD)</option>
+            </select>
+        </div>
+
+        <div id="slip-section">
+            <label>แนบรูปสลิปโอนเงิน:</label>
+            <input type="file" id="slipFile" accept="image/*">
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">ยืนยันการสั่งซื้อ</button>
+    </form>
+</section>
+
+<div id="summaryModal">
+    <div class="modal-content">
+        <h3>🎉 สั่งซื้อสำเร็จ!</h3>
+        <p style="text-align: center; font-size: 0.9rem; color: #888;">กรุณาแคปหน้าจอส่งให้แอดมิน</p>
+        <div id="summaryDetails"></div>
+        <button class="close-modal" onclick="closeSummary()">ปิดหน้าต่างนี้</button>
+    </div>
+</div>
+
+<script src="products.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
