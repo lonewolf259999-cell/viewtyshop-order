@@ -1,18 +1,25 @@
 const webhookURL = "https://discord.com/api/webhooks/1453209926527746068/Ao25I27qK1Jy3RoPO7TNKPmWhgD-BD2atzBGwhfF07wlVPIURqftOBfxmL8zxxUxdta1";
 
+// ฟังก์ชันเพิ่มแถวสินค้า
 function addProductRow() {
     const productList = document.getElementById('product-list');
     const rowId = Date.now();
     const div = document.createElement('div');
     div.className = 'product-row-item';
     div.id = `row-${rowId}`;
+    
+    // ดึงรายชื่อจาก SHIRT_DESIGNS มาสร้าง Option
+    const productOptions = SHIRT_DESIGNS.map(item => 
+        `<option value="${item.name} (${item.price}.-)">${item.name} - ${item.price} บาท</option>`
+    ).join('');
+
     div.innerHTML = `
         <button type="button" class="remove-btn" onclick="removeProductRow('${rowId}')">×</button>
         <div class="form-group">
             <label>👕 เลือกลายเสื้อ:</label>
             <select class="item-pattern" required>
                 <option value="">-- กรุณาเลือกลายเสื้อ --</option>
-                ${SHIRT_DESIGNS.map(item => `<option value="${item.name} (${item.price}.-)">${item.name} - ${item.price} บาท</option>`).join('')}
+                ${productOptions}
             </select>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
@@ -33,7 +40,8 @@ function addProductRow() {
             <div class="form-group">
                 <label>🎨 สี:</label>
                 <select class="item-color" required>
-                    <option value="ขาว">ขาว</option><option value="ดำ">ดำ</option>
+                    <option value="ขาว">ขาว</option>
+                    <option value="ดำ">ดำ</option>
                 </select>
             </div>
             <div class="form-group">
@@ -53,6 +61,7 @@ function removeProductRow(id) {
     }
 }
 
+// ตั้งค่าเริ่มต้นเมื่อโหลดหน้าเว็บ
 window.onload = () => {
     addProductRow();
     handlePaymentUI(); 
@@ -77,6 +86,7 @@ paymentSelect.addEventListener('change', handlePaymentUI);
 
 function closeSummary() { document.getElementById('summaryModal').style.display = 'none'; }
 
+// จัดการการกดส่งฟอร์ม
 document.getElementById('orderForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -93,25 +103,20 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     btn.innerText = "กำลังบันทึกข้อมูล...";
 
     let totalAmount = 0;
-    let productDetailsTextDC = ""; // สำหรับส่งเข้า Discord (ไซส์สั้น เช่น M, 7XL)
-    let productDetailsTextSummary = ""; // สำหรับแสดงหน้าเว็บ (ไซส์ยาว เช่น 7XL (อก 50-52))
+    let productDetailsTextSummary = "";
     
     document.querySelectorAll('.product-row-item').forEach(row => {
         const pattern = row.querySelector('.item-pattern').value;
-        const fullSize = row.querySelector('.item-size').value; // เช่น "M (อก 34-36)"
-        const shortSize = fullSize.split(' ')[0]; // ตัดเอาเฉพาะ "M" หรือ "7XL"
-        
+        const fullSize = row.querySelector('.item-size').value;
         const color = row.querySelector('.item-color').value;
         const qty = parseInt(row.querySelector('.item-qty').value);
         
-        let price = 1190;
+        // ดึงราคาออกจากวงเล็บ (1190.-)
+        let price = 0;
         const priceMatch = pattern.match(/\(([^)]+)\)/);
         if(priceMatch) price = parseInt(priceMatch[1].replace(/\D/g, ''));
         
         totalAmount += (price * qty);
-        
-        // แยกข้อความที่จะแสดง
-        productDetailsTextDC += `• ${pattern} [${color}/${fullSize}] x${qty}\n`;
         productDetailsTextSummary += `• ${pattern} [${color}/${fullSize}] x${qty}\n`;
     });
 
@@ -124,15 +129,13 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const province = document.getElementById('province').value;
     const zipcode = document.getElementById('zipcode').value;
 
-    const fullAddress = `${houseNo} ${street}\nต.${subDistrict} อ.${district}\nจ.${province} ${zipcode}`;
+    const fullAddress = `${houseNo} ${street} ต.${subDistrict} อ.${district} จ.${province} ${zipcode}`;
 
     const embed = {
-        title: payment === "โอนเงิน" ? `1. แบบโอนเงิน ${totalAmount}` : `2. แบบเก็บเงินปลายทาง ${totalAmount}`,
-        description: payment === "โอนเงิน" 
-            ? `**ViewTyShop**\n**โอนเงิน**\n\n**ส่งคุณ**\n${name}\n**ที่อยู่**\n${fullAddress}\n**Tel.** ${phone}\n\n**รายการสินค้า:**\n${productDetailsTextDC}`
-            : `**ViewTyShop**\n**COD (ยอด ${totalAmount} บาท)**\n\n**ส่งคุณ**\n${name}\n**ที่อยู่**\n${fullAddress}\n**Tel.** ${phone}\n\n**รายการสินค้า:**\n${productDetailsTextDC}`,
+        title: payment === "โอนเงิน" ? `1. แบบโอนเงิน ยอด ${totalAmount}` : `2. แบบเก็บเงินปลายทาง ยอด ${totalAmount}`,
+        description: `**ViewTyShop**\n**ช่องทาง:** ${payment}\n\n**ผู้รับ:** ${name}\n**ที่อยู่:** ${fullAddress}\n**เบอร์โทร:** ${phone}\n\n**รายการ:**\n${productDetailsTextSummary}`,
         color: payment === 'โอนเงิน' ? 3066993 : 15105570,
-        footer: { text: `วันนี้ เวลา ${new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}` }
+        footer: { text: `สั่งซื้อเมื่อ ${new Date().toLocaleString('th-TH')}` }
     };
 
     const formData = new FormData();
@@ -144,12 +147,12 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         if(res.ok) {
             document.getElementById('summaryDetails').innerHTML = `
                 <div style="text-align:left; margin-top:15px; border-top: 1px solid #eee; padding-top: 10px;">
-                    <b style="color: #5865F2; font-size: 1.2rem;">รูปแบบการชำระ: ${payment}</b><br>
-                    <b style="font-size: 1.1rem;">ยอดรวมทั้งหมด: ${totalAmount} บาท</b><br>
+                    <b style="color: #5865F2;">การชำระ: ${payment}</b><br>
+                    <b>ยอดรวม: ${totalAmount} บาท</b><br>
                     <hr>
-                    <b>ชื่อผู้รับ:</b> ${name}<br>
-                    <b>เบอร์โทร:</b> ${phone}<br>
-                    <b>ที่อยู่:</b> ${fullAddress.replace(/\n/g, ' ')}<br><br>
+                    <b>ชื่อ:</b> ${name}<br>
+                    <b>ที่อยู่:</b> ${fullAddress}<br>
+                    <b>เบอร์:</b> ${phone}<br><br>
                     <b>รายการสินค้า:</b><br>${productDetailsTextSummary.replace(/\n/g, '<br>')}
                 </div>`;
             document.getElementById('summaryModal').style.display = 'flex';
@@ -158,12 +161,12 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
             addProductRow();
             handlePaymentUI();
         } else {
-            alert("การส่งข้อมูลขัดข้อง กรุณาลองใหม่");
+            alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
         }
     })
-    .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ"))
+    .catch(err => alert("การเชื่อมต่อล้มเหลว"))
     .finally(() => {
         btn.disabled = false;
-        btn.innerText = "หน้านี้คือใบสรุปรายการสั่งซื้อ แคปหน้าจอส่งแจ้งแอดมินทางแชทได้เลยครับ";
+        btn.innerText = "ยืนยันการสั่งซื้อ";
     });
 });
