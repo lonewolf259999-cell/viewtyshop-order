@@ -132,7 +132,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const fullAddress = `${houseNo} ${street} ต.${subDistrict} อ.${district} จ.${province} ${zipcode}`;
 
     const embed = {
-        title: payment === "โอนเงิน" ? `1. แบบโอนเงิน ยอด ${totalAmount}` : `2. แบบเก็บเงินปลายทาง ยอด ${totalAmount}`,
+        title: payment === "โอนเงิน" ? `🟢 แบบโอนเงิน ยอด ${totalAmount}` : `🟠 แบบเก็บเงินปลายทาง ยอด ${totalAmount}`,
         description: `**ViewTyShop**\n**ช่องทาง:** ${payment}\n\n**ผู้รับ:** ${name}\n**ที่อยู่:** ${fullAddress}\n**เบอร์โทร:** ${phone}\n\n**รายการ:**\n${productDetailsTextSummary}`,
         color: payment === 'โอนเงิน' ? 3066993 : 15105570,
         footer: { text: `สั่งซื้อเมื่อ ${new Date().toLocaleString('th-TH')}` }
@@ -170,3 +170,4 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         btn.innerText = "ยืนยันการสั่งซื้อ";
     });
 });
+
