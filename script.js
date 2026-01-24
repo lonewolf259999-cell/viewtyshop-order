@@ -1,6 +1,17 @@
+// ==========================================
+// 1. การตั้งค่า (แก้ไขจุดนี้ได้เลย)
+// ==========================================
 const webhookURL = "https://discord.com/api/webhooks/1453209926527746068/Ao25I27qK1Jy3RoPO7TNKPmWhgD-BD2atzBGwhfF07wlVPIURqftOBfxmL8zxxUxdta1";
 
-// ฟังก์ชันเพิ่มแถวสินค้า
+const CONFIG = {
+    TITLE_PAID: "🟢 แบบโอนเงิน ยอด", 
+    TITLE_COD:  "🟠 แบบเก็บเงินปลายทาง ยอด" 
+};
+
+// ==========================================
+// 2. ฟังก์ชันการทำงานของระบบ (addProductRow, removeProductRow, handlePaymentUI คงเดิม)
+// ==========================================
+
 function addProductRow() {
     const productList = document.getElementById('product-list');
     const rowId = Date.now();
@@ -8,7 +19,6 @@ function addProductRow() {
     div.className = 'product-row-item';
     div.id = `row-${rowId}`;
     
-    // ดึงรายชื่อจาก SHIRT_DESIGNS มาสร้าง Option
     const productOptions = SHIRT_DESIGNS.map(item => 
         `<option value="${item.name} (${item.price}.-)">${item.name} - ${item.price} บาท</option>`
     ).join('');
@@ -61,10 +71,9 @@ function removeProductRow(id) {
     }
 }
 
-// ตั้งค่าเริ่มต้นเมื่อโหลดหน้าเว็บ
 window.onload = () => {
     addProductRow();
-    handlePaymentUI(); 
+    handlePaymentUI();
 };
 
 const paymentSelect = document.getElementById('paymentMethod');
@@ -83,7 +92,6 @@ function handlePaymentUI() {
 }
 
 paymentSelect.addEventListener('change', handlePaymentUI);
-
 function closeSummary() { document.getElementById('summaryModal').style.display = 'none'; }
 
 // จัดการการกดส่งฟอร์ม
@@ -111,7 +119,6 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         const color = row.querySelector('.item-color').value;
         const qty = parseInt(row.querySelector('.item-qty').value);
         
-        // ดึงราคาออกจากวงเล็บ (1190.-)
         let price = 0;
         const priceMatch = pattern.match(/\(([^)]+)\)/);
         if(priceMatch) price = parseInt(priceMatch[1].replace(/\D/g, ''));
@@ -129,11 +136,31 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const province = document.getElementById('province').value;
     const zipcode = document.getElementById('zipcode').value;
 
-    const fullAddress = `${houseNo} ${street} ต.${subDistrict} อ.${district} จ.${province} ${zipcode}`;
+    // การจัดที่อยู่แบบเว้นบรรทัด
+    const fullAddress = `${houseNo} ${street} \nต.${subDistrict} อ.${district} \nจ.${province} ${zipcode}`;
+
+    // ยอดเงินแบบมีคอมม่า
+    const amountStr = `${totalAmount.toLocaleString()} บาท`;
+
+    // จัดรูปแบบสถานะการชำระเงิน
+    const paymentStatus = payment === "โอนเงิน" ? "โอนเงินแล้ว" : `COD ${amountStr}`;
 
     const embed = {
-        title: payment === "โอนเงิน" ? `🟢 แบบโอนเงิน ยอด ${totalAmount}` : `🟠 แบบเก็บเงินปลายทาง ยอด ${totalAmount}`,
-        description: `**ViewTyShop**\n**** ${payment}\n\n**ผู้รับ:** ${name}\n**ที่อยู่:** ${fullAddress}\n**เบอร์โทร:** ${phone}\n\n**รายการ:**\n${productDetailsTextSummary}`,
+        // แก้ไขส่วนหัวข้อ (Title) ให้ดึงยอดเงินมาใส่
+        title: payment === "โอนเงิน" 
+            ? `${CONFIG.TITLE_PAID} ${amountStr}` 
+            : `${CONFIG.TITLE_COD} ${amountStr}`,
+        description: [
+            `**ViewTyShop**`,
+            `${paymentStatus}`,
+            ``, 
+            `**ผู้รับ:** ${name}`,
+            `**ที่อยู่:** ${fullAddress}`,
+            `**เบอร์โทร:** ${phone}`,
+            ``, 
+            `**รายการ:**`,
+            productDetailsTextSummary
+        ].join('\n'),
         color: payment === 'โอนเงิน' ? 3066993 : 15105570,
         footer: { text: `สั่งซื้อเมื่อ ${new Date().toLocaleString('th-TH')}` }
     };
@@ -148,10 +175,10 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
             document.getElementById('summaryDetails').innerHTML = `
                 <div style="text-align:left; margin-top:15px; border-top: 1px solid #eee; padding-top: 10px;">
                     <b style="color: #5865F2;">การชำระ: ${payment}</b><br>
-                    <b>ยอดรวม: ${totalAmount} บาท</b><br>
+                    <b>ยอดรวม: ${amountStr}</b><br>
                     <hr>
                     <b>ชื่อ:</b> ${name}<br>
-                    <b>ที่อยู่:</b> ${fullAddress}<br>
+                    <b>ที่อยู่:</b> ${fullAddress.replace(/\n/g, '<br>')}<br>
                     <b>เบอร์:</b> ${phone}<br><br>
                     <b>รายการสินค้า:</b><br>${productDetailsTextSummary.replace(/\n/g, '<br>')}
                 </div>`;
@@ -170,5 +197,3 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         btn.innerText = "ยืนยันการสั่งซื้อ";
     });
 });
-
-
